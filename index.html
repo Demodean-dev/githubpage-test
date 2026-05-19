@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify — Artistas 2016–2019</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      color: #e8e8f0;
+      font-family: 'Courier New', monospace;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a0a2e 0%, #0d1117 60%, #0a1628 100%);
+      border-bottom: 1px solid #1e1e3a;
+      padding: 32px 24px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-inner { max-width: 720px; margin: 0 auto; }
+
+    .header-tag {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .tag-spotify { font-size: 11px; letter-spacing: 4px; color: #1db954; text-transform: uppercase; }
+    .tag-years   { font-size: 11px; letter-spacing: 2px; color: #555; }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    input, select {
+      background: #111;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      color: #e8e8f0;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    input { flex: 1 1 160px; }
+    select { cursor: pointer; }
+
+    .subtitle {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 1px;
+    }
+
+    .legend {
+      max-width: 720px;
+      margin: 16px auto 0;
+      padding: 0 24px;
+      display: flex;
+      gap: 16px;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+    .legend-label { font-size: 11px; color: #666; letter-spacing: 1px; }
+
+    #list {
+      max-width: 720px;
+      margin: 12px auto 40px;
+      padding: 0 24px;
+    }
+
+    .row {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .row:hover { background: #0e0e1a; }
+    .row.open  { background: #111827; border-color: #1e293b; }
+
+    .row-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+    }
+
+    .rank {
+      font-size: 10px;
+      width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+      color: #333;
+    }
+    .rank.top { color: #1db954; }
+
+    .name-area { flex: 1; min-width: 0; }
+
+    .artist-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #d4d4e8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 5px;
+    }
+    .row.open .artist-name { color: #fff; }
+
+    .bar-wrap {
+      height: 4px;
+      border-radius: 2px;
+      background: #1a1a2e;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .stats { text-align: right; flex-shrink: 0; }
+    .plays { font-size: 15px; font-weight: 700; color: #fff; }
+    .time  { font-size: 10px; color: #444; letter-spacing: 0.5px; }
+
+    .chevron { color: #333; font-size: 10px; flex-shrink: 0; }
+
+    .detail {
+      display: none;
+      padding: 0 12px 14px 48px;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .row.open .detail { display: flex; }
+
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .detail-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .detail-year { font-size: 12px; color: #888; width: 36px; }
+
+    .detail-bar-wrap {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: #1a1a2e;
+      overflow: hidden;
+    }
+
+    .detail-bar { height: 100%; opacity: 0.7; }
+
+    .detail-plays { font-size: 12px; color: #ccc; width: 60px; text-align: right; }
+    .detail-mins  { font-size: 11px; color: #555; width: 56px; text-align: right; }
+
+    .empty {
+      text-align: center;
+      color: #333;
+      padding: 60px 0;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-tag">
+      <span class="tag-spotify">Spotify</span>
+      <span class="tag-years">2016 — 2019</span>
+    </div>
+    <h1>Artistas escuchados</h1>
+    <div class="controls">
+      <input type="text" id="search" placeholder="Buscar artista..." oninput="render()">
+      <select id="yearFilter" onchange="render()">
+        <option value="all">Todos los años</option>
+        <option value="2016">2016</option>
+        <option value="2017">2017</option>
+        <option value="2018">2018</option>
+        <option value="2019">2019</option>
+      </select>
+      <select id="sortBy" onchange="render()">
+        <option value="plays">Ordenar: reproducciones</option>
+        <option value="minutes">Ordenar: minutos</option>
+      </select>
+    </div>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span class="legend-label">2016</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div><span class="legend-label">2017</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-label">2018</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span class="legend-label">2019</span></div>
+</div>
+
+<div id="list"></div>
+
+<script>
+const YEAR_COLORS = { "2016":"#f97316","2017":"#a855f7","2018":"#22c55e","2019":"#3b82f6" };
+
+const ARTISTS = [{"artist":"Rapsusklei","total":2004,"years":{"2017":{"plays":860,"minutes":1974},"2018":{"plays":914,"minutes":2599},"2019":{"plays":230,"minutes":649}}},{"artist":"Korn","total":534,"years":{"2016":{"plays":1,"minutes":0},"2018":{"plays":306,"minutes":929},"2019":{"plays":227,"minutes":571}}},{"artist":"Green Valley","total":517,"years":{"2017":{"plays":15,"minutes":38},"2018":{"plays":349,"minutes":1056},"2019":{"plays":153,"minutes":442}}},{"artist":"Slipknot","total":503,"years":{"2018":{"plays":394,"minutes":942},"2019":{"plays":109,"minutes":218}}},{"artist":"Avenged Sevenfold","total":474,"years":{"2018":{"plays":220,"minutes":1024},"2019":{"plays":254,"minutes":991}}},{"artist":"Skrillex","total":467,"years":{"2016":{"plays":234,"minutes":681},"2017":{"plays":233,"minutes":432}}},{"artist":"Imagine Dragons","total":401,"years":{"2018":{"plays":317,"minutes":734},"2019":{"plays":84,"minutes":109}}},{"artist":"Mägo de Oz","total":254,"years":{"2017":{"plays":158,"minutes":437},"2018":{"plays":59,"minutes":162},"2019":{"plays":37,"minutes":73}}},{"artist":"Micro TDH","total":232,"years":{"2018":{"plays":74,"minutes":235},"2019":{"plays":158,"minutes":534}}},{"artist":"Porta","total":216,"years":{"2017":{"plays":70,"minutes":161},"2018":{"plays":96,"minutes":378},"2019":{"plays":50,"minutes":166}}},{"artist":"fun.","total":203,"years":{"2016":{"plays":36,"minutes":127},"2017":{"plays":70,"minutes":183},"2018":{"plays":85,"minutes":245},"2019":{"plays":12,"minutes":37}}},{"artist":"Julieta Venegas","total":194,"years":{"2018":{"plays":136,"minutes":337},"2019":{"plays":58,"minutes":128}}},{"artist":"Eminem","total":185,"years":{"2018":{"plays":147,"minutes":447},"2019":{"plays":38,"minutes":89}}},{"artist":"Sharif","total":183,"years":{"2017":{"plays":55,"minutes":100},"2018":{"plays":113,"minutes":298},"2019":{"plays":15,"minutes":34}}},{"artist":"Kansas","total":161,"years":{"2016":{"plays":41,"minutes":107},"2017":{"plays":67,"minutes":211},"2018":{"plays":42,"minutes":141},"2019":{"plays":11,"minutes":38}}},{"artist":"Linkin Park","total":143,"years":{"2018":{"plays":76,"minutes":157},"2019":{"plays":67,"minutes":108}}},{"artist":"Friedrich Habetler","total":142,"years":{"2018":{"plays":101,"minutes":182},"2019":{"plays":41,"minutes":55}}},{"artist":"LMFAO","total":142,"years":{"2018":{"plays":116,"minutes":176},"2019":{"plays":26,"minutes":21}}},{"artist":"Gondwana","total":138,"years":{"2018":{"plays":47,"minutes":188},"2019":{"plays":91,"minutes":211}}},{"artist":"Sia","total":123,"years":{"2017":{"plays":60,"minutes":97},"2018":{"plays":45,"minutes":116},"2019":{"plays":18,"minutes":24}}},{"artist":"Calle 13","total":123,"years":{"2018":{"plays":95,"minutes":221},"2019":{"plays":28,"minutes":51}}},{"artist":"Ragga Twins","total":122,"years":{"2016":{"plays":22,"minutes":76},"2017":{"plays":17,"minutes":32},"2018":{"plays":74,"minutes":137},"2019":{"plays":9,"minutes":5}}},{"artist":"System Of A Down","total":116,"years":{"2018":{"plays":96,"minutes":205},"2019":{"plays":20,"minutes":25}}},{"artist":"Panic! At The Disco","total":103,"years":{"2017":{"plays":75,"minutes":114},"2018":{"plays":17,"minutes":42},"2019":{"plays":11,"minutes":13}}},{"artist":"Tommy Lee Sparta","total":95,"years":{"2017":{"plays":44,"minutes":95},"2018":{"plays":51,"minutes":27}}},{"artist":"Twenty One Pilots","total":94,"years":{"2016":{"plays":9,"minutes":26},"2017":{"plays":67,"minutes":172},"2018":{"plays":12,"minutes":33},"2019":{"plays":6,"minutes":12}}},{"artist":"Sean Paul","total":89,"years":{"2018":{"plays":49,"minutes":148},"2019":{"plays":40,"minutes":47}}},{"artist":"Arce","total":87,"years":{"2017":{"plays":66,"minutes":135},"2018":{"plays":16,"minutes":28},"2019":{"plays":5,"minutes":14}}},{"artist":"Zoiket","total":87,"years":{"2018":{"plays":44,"minutes":169},"2019":{"plays":43,"minutes":105}}},{"artist":"Speedy Ortiz","total":86,"years":{"2017":{"plays":27,"minutes":57},"2018":{"plays":46,"minutes":124},"2019":{"plays":13,"minutes":45}}},{"artist":"Steven Universe","total":86,"years":{"2017":{"plays":2,"minutes":1},"2018":{"plays":66,"minutes":134},"2019":{"plays":18,"minutes":25}}},{"artist":"League of Legends","total":84,"years":{"2018":{"plays":74,"minutes":130},"2019":{"plays":10,"minutes":17}}},{"artist":"Redimi2","total":81,"years":{"2018":{"plays":39,"minutes":232},"2019":{"plays":42,"minutes":127}}},{"artist":"Tommy Lee","total":79,"years":{"2017":{"plays":79,"minutes":124}}},{"artist":"Nach","total":79,"years":{"2017":{"plays":3,"minutes":1},"2018":{"plays":65,"minutes":152},"2019":{"plays":11,"minutes":25}}},{"artist":"N.E.R.D","total":79,"years":{"2018":{"plays":59,"minutes":153},"2019":{"plays":20,"minutes":62}}},{"artist":"Fall Out Boy","total":78,"years":{"2016":{"plays":27,"minutes":69},"2017":{"plays":35,"minutes":59},"2018":{"plays":11,"minutes":31},"2019":{"plays":5,"minutes":10}}},{"artist":"Cage The Elephant","total":77,"years":{"2018":{"plays":34,"minutes":45},"2019":{"plays":43,"minutes":75}}},{"artist":"Residente","total":74,"years":{"2017":{"plays":45,"minutes":107},"2018":{"plays":23,"minutes":76},"2019":{"plays":6,"minutes":15}}},{"artist":"C-Kan","total":70,"years":{"2017":{"plays":59,"minutes":126},"2019":{"plays":11,"minutes":26}}},{"artist":"Dread Mar I","total":70,"years":{"2017":{"plays":44,"minutes":101},"2018":{"plays":18,"minutes":52},"2019":{"plays":8,"minutes":14}}},{"artist":"Ellie Goulding","total":69,"years":{"2017":{"plays":16,"minutes":3},"2018":{"plays":47,"minutes":87},"2019":{"plays":6,"minutes":11}}},{"artist":"Marshmello","total":68,"years":{"2016":{"plays":11,"minutes":5},"2017":{"plays":57,"minutes":118}}},{"artist":"Lil Wayne","total":68,"years":{"2018":{"plays":61,"minutes":183},"2019":{"plays":7,"minutes":13}}},{"artist":"The Used","total":66,"years":{"2019":{"plays":66,"minutes":176}}},{"artist":"Michael A. Levine","total":65,"years":{"2018":{"plays":65,"minutes":128}}},{"artist":"Gorillaz","total":64,"years":{"2017":{"plays":29,"minutes":86},"2018":{"plays":18,"minutes":38},"2019":{"plays":17,"minutes":47}}},{"artist":"BROODS","total":63,"years":{"2017":{"plays":16,"minutes":18},"2018":{"plays":43,"minutes":76},"2019":{"plays":4,"minutes":13}}},{"artist":"Snoop Dogg","total":62,"years":{"2018":{"plays":25,"minutes":73},"2019":{"plays":37,"minutes":103}}},{"artist":"Akihiko Narita","total":61,"years":{"2018":{"plays":61,"minutes":171}}},{"artist":"Green A","total":61,"years":{"2019":{"plays":61,"minutes":221}}},{"artist":"Epic Rap Battles of History","total":60,"years":{"2016":{"plays":28,"minutes":62},"2017":{"plays":32,"minutes":54}}},{"artist":"Wiz Khalifa","total":58,"years":{"2018":{"plays":23,"minutes":51},"2019":{"plays":35,"minutes":59}}},{"artist":"Blue Foundation","total":57,"years":{"2018":{"plays":51,"minutes":133},"2019":{"plays":6,"minutes":10}}},{"artist":"Breaking Benjamin","total":57,"years":{"2019":{"plays":57,"minutes":189}}},{"artist":"NEEDTOBREATHE","total":55,"years":{"2018":{"plays":49,"minutes":102},"2019":{"plays":6,"minutes":8}}},{"artist":"Angus & Julia Stone","total":54,"years":{"2018":{"plays":51,"minutes":176},"2019":{"plays":3,"minutes":0}}},{"artist":"BAYONETTA","total":54,"years":{"2018":{"plays":54,"minutes":48}}},{"artist":"Miranda!","total":53,"years":{"2018":{"plays":37,"minutes":112},"2019":{"plays":16,"minutes":39}}},{"artist":"Belanova","total":51,"years":{"2018":{"plays":32,"minutes":60},"2019":{"plays":19,"minutes":21}}},{"artist":"Israel Kamakawiwo'ole","total":48,"years":{"2019":{"plays":48,"minutes":87}}},{"artist":"MAGIC!","total":47,"years":{"2018":{"plays":10,"minutes":23},"2019":{"plays":37,"minutes":61}}},{"artist":"Axwell /\\ Ingrosso","total":46,"years":{"2016":{"plays":25,"minutes":77},"2017":{"plays":21,"minutes":32}}},{"artist":"Black Eyed Peas","total":46,"years":{"2017":{"plays":46,"minutes":106}}},{"artist":"Fleurie","total":46,"years":{"2018":{"plays":39,"minutes":131},"2019":{"plays":7,"minutes":2}}},{"artist":"Marilyn Manson","total":44,"years":{"2018":{"plays":44,"minutes":116}}},{"artist":"Thirty Seconds To Mars","total":44,"years":{"2018":{"plays":34,"minutes":95},"2019":{"plays":10,"minutes":19}}},{"artist":"Shotta","total":41,"years":{"2018":{"plays":35,"minutes":83},"2019":{"plays":6,"minutes":13}}},{"artist":"Jared Halley","total":39,"years":{"2018":{"plays":39,"minutes":175}}},{"artist":"Redfoo","total":39,"years":{"2018":{"plays":32,"minutes":48},"2019":{"plays":7,"minutes":8}}},{"artist":"Mike Posner","total":37,"years":{"2017":{"plays":37,"minutes":73}}},{"artist":"Thousand Foot Krutch","total":36,"years":{"2017":{"plays":36,"minutes":112}}},{"artist":"Helena Noguerra","total":35,"years":{"2018":{"plays":35,"minutes":42}}},{"artist":"Evanescence","total":34,"years":{"2019":{"plays":34,"minutes":100}}},{"artist":"Lorde","total":33,"years":{"2017":{"plays":33,"minutes":64}}},{"artist":"Favored Nations","total":31,"years":{"2017":{"plays":31,"minutes":34}}},{"artist":"Keyblade","total":31,"years":{"2017":{"plays":26,"minutes":5},"2019":{"plays":5,"minutes":11}}},{"artist":"Heavy Young Heathens","total":25,"years":{"2018":{"plays":25,"minutes":3}}},{"artist":"Queen","total":23,"years":{"2017":{"plays":19,"minutes":62},"2018":{"plays":4,"minutes":3}}},{"artist":"Wham!","total":13,"years":{"2017":{"plays":13,"minutes":27}}},{"artist":"Daughter","total":13,"years":{"2018":{"plays":13,"minutes":3}}},{"artist":"Ricardo Silva","total":12,"years":{"2017":{"plays":11,"minutes":2},"2018":{"plays":1,"minutes":1}}},{"artist":"Racoon Racoon","total":12,"years":{"2018":{"plays":12,"minutes":12}}},{"artist":"Y2K","total":11,"years":{"2019":{"plays":11,"minutes":12}}},{"artist":"Maroon 5","total":10,"years":{"2019":{"plays":10,"minutes":16}}},{"artist":"Eddy Wilson And Friends","total":9,"years":{"2019":{"plays":9,"minutes":30}}}];
+
+const MAX_PLAYS = ARTISTS[0].total;
+const TOTAL_PLAYS = ARTISTS.reduce((s,a)=>s+a.total,0);
+let openArtist = null;
+
+function fmtTime(mins) {
+  if (mins >= 60) return `${Math.floor(mins/60)}h ${mins%60}m`;
+  return `${mins}m`;
+}
+
+function render() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const year   = document.getElementById('yearFilter').value;
+  const sortBy = document.getElementById('sortBy').value;
+
+  let list = ARTISTS.filter(a => {
+    if (search && !a.artist.toLowerCase().includes(search)) return false;
+    if (year !== 'all' && !a.years[year]) return false;
+    return true;
+  });
+
+  if (sortBy === 'minutes') {
+    list = [...list].sort((a,b) => {
+      const ma = Object.values(a.years).reduce((s,v)=>s+v.minutes,0);
+      const mb = Object.values(b.years).reduce((s,v)=>s+v.minutes,0);
+      return mb - ma;
+    });
+  }
+
+  document.getElementById('subtitle').textContent =
+    `${list.length} artistas · ${TOTAL_PLAYS.toLocaleString()} reproducciones totales`;
+
+  const container = document.getElementById('list');
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty">No se encontraron artistas</div>';
+    return;
+  }
+
+  container.innerHTML = list.map((a, i) => {
+    const totalMins = Object.values(a.years).reduce((s,v)=>s+v.minutes,0);
+    const barWidth  = (a.total / MAX_PLAYS * 100).toFixed(1);
+    const isOpen    = openArtist === a.artist;
+
+    const segments = Object.entries(a.years).map(([y,v]) =>
+      `<div style="flex:${v.plays};background:${YEAR_COLORS[y]};opacity:.85"></div>`
+    ).join('');
+
+    const details = Object.entries(a.years).map(([y,v]) => {
+      const pct = (v.plays / a.total * 100).toFixed(1);
+      return `
+        <div class="detail-row">
+          <div class="detail-dot" style="background:${YEAR_COLORS[y]}"></div>
+          <span class="detail-year">${y}</span>
+          <div class="detail-bar-wrap">
+            <div class="detail-bar" style="width:${pct}%;background:${YEAR_COLORS[y]}"></div>
+          </div>
+          <span class="detail-plays">${v.plays.toLocaleString()} ▶</span>
+          <span class="detail-mins">${fmtTime(v.minutes)}</span>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="row${isOpen?' open':''}" onclick="toggle('${a.artist.replace(/'/g,"\\'")}')">
+        <div class="row-main">
+          <span class="rank${i<3?' top':''}">${i+1}</span>
+          <div class="name-area">
+            <div class="artist-name">${a.artist}</div>
+            <div class="bar-wrap" style="width:${barWidth}%;min-width:4px">${segments}</div>
+          </div>
+          <div class="stats">
+            <div class="plays">${a.total.toLocaleString()}</div>
+            <div class="time">${Math.round(totalMins/60)}h ${Math.round(totalMins%60)}m</div>
+          </div>
+          <span class="chevron">${isOpen?'▲':'▼'}</span>
+        </div>
+        <div class="detail">${details}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggle(artist) {
+  openArtist = openArtist === artist ? null : artist;
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
